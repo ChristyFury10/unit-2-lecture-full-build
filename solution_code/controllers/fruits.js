@@ -1,34 +1,66 @@
 const express = require('express');
 const router = express.Router();
+const startFruits = require('../db/fruitSeedData.js')
+const Fruit = require('../models/fruit.js')
 
-// Create
+// Post
 router.post('/', async (req, res) => {
-	res.send('fruit post route');
+	console.log(req.body)
+	req.body.readyToEat = req.body.readyToEat === 'on' ? true : false;
+	const fruit = await Fruit.create(req.body);
+	res.redirect('/fruits');
 });
 
-// Index
+// New
+router.get('/new', (req, res) => {
+ res.render("fruits/new.ejs")
+})
+
+// /fruits/123/edit
+router.get('/:id/edit', async (req, res) => {
+	const fruit = await Fruit.findById(req.params.id);
+	res.render("fruits/edit.ejs", {fruit})
+})
+
+// Index...show all fruits
 router.get('/', async (req, res) => {
-	res.send('fruit index route');
+	// wait or this to complete
+	// Fruit.find() is a Promise
+	// Promise is resolved or rejected
+	const fruits = await Fruit.find({});
+	// then run the next line of code
+	// res.send(fruits);
+	res.render("fruits/index.ejs", {fruits});
 });
 
 // Seed
 router.get('/seed', async (req, res) => {
-	res.redirect('fruit seed route');
+	await Fruit.deleteMany({});
+	await Fruit.create(startFruits);
+	res.redirect('/fruits');
 });
 
-// Show
+// Show...show one fruit
 router.get('/:id', async (req, res) => {
-	res.send('fruit show route');
+	const fruit = await Fruit.findById(req.params.id);
+	// res.send(fruit);
+	res.render("fruits/show.ejs", {fruit})
 });
 
 // Delete
 router.delete('/:id', async (req, res) => {
-	res.send('fruit delete route');
+	const fruit = await Fruit.findByIdAndDelete(req.params.id);
+	res.redirect('/fruits');
 });
 
 // Update
 router.put('/:id', async (req, res) => {
-	res.send('fruit update route');
+	const id = req.params.id;
+	req.body.readyToEat = req.body.readyToEat === 'on' ? true : false;
+	const fruit = await Fruit.findByIdAndUpdate(id, req.body, {
+		new: true,
+	});
+	res.redirect('/fruits');
 });
 
 module.exports = router;
